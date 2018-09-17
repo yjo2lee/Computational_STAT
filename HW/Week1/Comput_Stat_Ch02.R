@@ -9,7 +9,7 @@ f3<-function(x){
 }
 
 g2 <- function(x){
-   3^x/sqrt(x)
+   ((3^(-x)/(x^2+6))+x^3)*sin(x)
 }
 
 g3 <- function(x){
@@ -88,13 +88,14 @@ system.time(for(i in 1:10^3) optimize(g1,c(1,5), maximum = T))
 
 
 plot(seq(1,10,0.1),g2(seq(1,10,0.1)),type='l',xlab="x",ylab="g2(x)",main="g2")
-myBisec(g2, 1,4)
-myNewton(g2, 1)
-mySecant(g2, 1, 4)
-system.time(for(i in 1:10^3) myBisec(g2, 1,5))
-system.time(for(i in 1:10^3) myNewton(g2, 1))
-system.time(for(i in 1:10^3) mySecant(g2, 1,5))
-system.time(for(i in 1:10^3) optimize(g2,c(1,5), maximum = T))
+myBisec(g2, 7,10)
+myNewton(g2, 8)
+mySecant(g2, 7, 10)
+optimize(g2,c(7,10), maximum = T)
+system.time(for(i in 1:10^3) myBisec(g2, 7,10))
+system.time(for(i in 1:10^3) myNewton(g2, 8))
+system.time(for(i in 1:10^3) mySecant(g2, 7, 10))
+system.time(for(i in 1:10^3) optimize(g2,c(7,10), maximum = T))
 
 plot(seq(1,10,0.1),g3(seq(1,10,0.1)),type='l',xlab="x",ylab="g3(x)",main="g3")
 myBisec(g3, 5,7)
@@ -186,7 +187,36 @@ system.time(for(i in 1:10^3) mySecant(loglkd.normal, -2,0))
 system.time(for(i in 1:10^3) optimize(loglkd.normal, c(-1,1), maximum = T))
 
 # 2.2
+x.prob2 = c(3.91,4.85,2.28,4.06,3.70,4.04,5.46,3.53,2.28,1.96, 2.53,3.88,2.22,3.47,4.82,2.46,2.99,2.54,0.52,2.50)
+#a) Loglikelihood function
+loglkd.prob2 <- function(theta){
+  loglkd.theta = rep(0, length(theta))
+  for(i in 1:length(theta)){
+    loglkd.theta[i] = sum(log(1-cos(x.prob2-theta[i]))-log(2*pi))
+  }
+  return(loglkd.theta)
+}
 
+plot(seq(-pi,pi,0.01), loglkd.prob2(seq(-pi,pi,0.01)), type = 'l', xlab = 'theta', ylab='loglikelihood', main = "loglikelihood of prob2")
+
+#b) method of moments estimator
+mme.theta = asin(mean(x.prob2)-pi)
+#c) using the method of moments estimator as a start value
+myNewton(loglkd.prob2, mme.theta)
+myNewton(loglkd.prob2,-2.7)
+myNewton(loglkd.prob2, 2.7)
+optimize(loglkd.prob2, c(-3,3), maximum = T)
+
+#d, e)
+theta.2 = seq(-pi, pi, by = (2*pi/(199)))
+vec.prob2 = rep(0,200)
+for(i in 2:length(theta.2)){
+  vec.prob2[i] = myNewton(loglkd.prob2, theta.2[i])$x_star
+  f.opt = myNewton(loglkd.prob2, theta.2[i])$optimag
+  if(vec.prob2[i-1] != vec.prob2[i]){
+    print(c(i, round(theta.2[i-1],4), round(theta.2[i],4),round(theta.2[i+1],4), round(vec.prob2[i],4), round(f.opt,4)))
+  }
+}
 # optim
 # default: Nelder-Mead"
 f <- expression(x^2, 'x')
